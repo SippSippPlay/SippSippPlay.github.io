@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sipp Sipp Play – Lägg till spelare</title>
+<style>
+  html, body {height:100%; margin:0; padding:0; font-family:Arial,sans-serif; background:linear-gradient(135deg,#ff8a00,#e52e71); color:white;}
+  .container {height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px; position:relative;}
+  header {font-size:2.5rem; font-weight:bold; margin-bottom:30px;}
+  .player-list {margin-top:30px; text-align:center; width:250px;}
+  .player-item {display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.2); padding:8px 12px; margin-bottom:5px; border-radius:10px;}
+  .player-item span {flex:1; text-align:left;}
+  .player-item button {padding:5px 10px; font-size:0.9rem; background-color:#e52e71; color:white; border:none; border-radius:8px; cursor:pointer;}
+  .player-item button:hover {background-color:#ff8a00;}
+  #playerName {padding:8px; border-radius:8px; border:none; margin-right:10px; width:150px;}
+  #addPlayerBtn {margin-top:15px; padding:10px 25px; border-radius:10px; background-color:white; color:#e52e71; font-weight:bold; cursor:pointer; transition:0.3s; border:none;}
+  #addPlayerBtn:hover {background-color:#ff8a00; color:white;}
+  #startBtn {display:block; margin-top:20px; padding:10px 25px; border-radius:10px; background-color:white; color:#e52e71; font-weight:bold; text-decoration:none; transition:0.3s;}
+  #startBtn:hover {background-color:#ff8a00; color:white;}
+  .back-button {position:absolute; top:20px; left:20px; display:flex; align-items:center; justify-content:center; width:50px; height:50px; background: rgba(0,0,0,0.3); border-radius:12px; transition: background 0.3s; text-decoration:none; z-index:10;}
+  .back-button:hover { background: rgba(0,0,0,0.6); }
+  .back-button svg { width:24px; height:24px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Tillbakaknapp -->
+  <a href="index.html" class="back-button">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 18L9 12L15 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </a>
+
+  <header>Sipp Sipp Play</header>
+
+  <div>
+    <input type="text" id="playerName" placeholder="Skriv spelarens namn">
+    <button id="addPlayerBtn">+ Lägg till spelare</button>
+  </div>
+
+  <div class="player-list" id="playerList"></div>
+  <a href="sippsipp-spel.html" id="startBtn">START</a>
+</div>
+
+<script>
+  const playerList = document.getElementById("playerList");
+  const addPlayerBtn = document.getElementById("addPlayerBtn");
+  const playerNameInput = document.getElementById("playerName");
+
+  const maxPlayers = 9;
+  const playerColors = ["#ff0000","#00ff00","#0000ff","#ffff00","#ff00ff","#00ffff","#ff8000","#8000ff","#00ff80"];
+
+  // Starta med 2 spelare
+  let players = [
+    {name:"Spelare 1", color:playerColors[0]},
+    {name:"Spelare 2", color:playerColors[1]}
+  ];
+
+  function savePlayers() {
+    localStorage.setItem("sippPlayers", JSON.stringify(players));
+  }
+
+  function renderPlayers() {
+    playerList.innerHTML = "";
+    players.forEach((p, index) => {
+      const playerDiv = document.createElement("div");
+      playerDiv.classList.add("player-item");
+
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = p.name;
+      nameSpan.style.color = p.color;
+
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "X";
+      removeBtn.addEventListener("click", () => {
+        if(players.length > 2){ // minst 2 spelare kvar
+          players.splice(index,1);
+          savePlayers();
+          renderPlayers();
+        } else {
+          alert("Du måste ha minst 2 spelare!");
+        }
+      });
+
+      playerDiv.appendChild(nameSpan);
+      playerDiv.appendChild(removeBtn);
+      playerList.appendChild(playerDiv);
+    });
+
+    // Dölj +knappen om max antal nåtts
+    addPlayerBtn.style.display = players.length >= maxPlayers ? "none" : "inline-block";
+  }
+
+  function addPlayer() {
+    const name = playerNameInput.value.trim();
+    if(name === "") return alert("Skriv ett namn!");
+    if(players.length >= maxPlayers) return;
+    // Ge färg baserat på index
+    const color = playerColors[players.length];
+    players.push({name, color});
+    playerNameInput.value = "";
+    savePlayers();
+    renderPlayers();
+  }
+
+  addPlayerBtn.addEventListener("click", addPlayer);
+  playerNameInput.addEventListener("keydown", e => { if(e.key === "Enter") addPlayer(); });
+
+  // Initiera sidan
+  savePlayers();
+  renderPlayers();
+</script>
+</body>
+</html>
