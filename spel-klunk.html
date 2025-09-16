@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sipp Sipp – Partyspel</title>
+<style>
+body {
+  margin:0;
+  font-family:Arial,sans-serif;
+  background:linear-gradient(to bottom,#ff8a00,#e52e71);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+  color:white;
+}
+
+.game-container {
+  background: rgba(0,0,0,0.5);
+  padding:30px;
+  border-radius:20px;
+  text-align:center;
+  max-width:400px;
+  width:90%;
+  position:relative;
+}
+
+h1 { margin-bottom:20px; }
+
+#statement {
+  font-size:1.2rem;
+  margin-bottom:20px;
+  min-height:50px;
+  transition: opacity 0.5s;
+}
+
+.fade-out { opacity:0; }
+.fade-in { opacity:1; }
+
+.players-list { text-align:left; margin-bottom:20px; }
+
+/* Snygga markeringar */
+.players-list label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  margin-bottom: 10px;
+  user-select: none;
+}
+
+.players-list input[type="checkbox"] {
+  display: none;
+}
+
+.players-list .checkbox-custom {
+  width: 25px;
+  height: 25px;
+  border: 2px solid white;
+  border-radius: 8px;
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.players-list .checkbox-custom.checked {
+  background-color: #ff8a00;
+  border-color: #ff8a00;
+}
+
+.players-list .checkbox-custom svg {
+  display: none;
+  width: 16px;
+  height: 16px;
+  stroke: white;
+  stroke-width: 2;
+}
+
+.players-list .checkbox-custom.checked svg {
+  display: block;
+}
+
+#submitBtn {
+  padding:15px 30px;
+  font-size:1.2rem;
+  background:#fff;
+  color:#e52e71;
+  border:none;
+  border-radius:12px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.3s;
+}
+#submitBtn:hover { background:#ff8a00; color:white; }
+
+#scoreBoard { margin-top:20px; text-align:center; }
+.score-item {
+  margin-bottom:8px;
+  font-size:1.1rem;
+  background:rgba(255,255,255,0.2);
+  padding:6px;
+  border-radius:10px;
+  position:relative;
+}
+
+/* Förändring: vinnare */
+.winner {
+  border: 2px solid gold;
+  font-weight: bold;
+  background: rgba(255,215,0,0.3);
+  animation: pulse 1.5s infinite;
+}
+
+.score-change {
+  font-size:0.9rem;
+  color:#00ff00;
+  margin-left:6px;
+}
+
+.back-button {
+  position:absolute;
+  top:20px;
+  left:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:50px;
+  height:50px;
+  background: rgba(0,0,0,0.3);
+  border-radius:12px;
+  transition: background 0.3s;
+  text-decoration:none;
+  z-index:10;
+}
+.back-button:hover { background: rgba(0,0,0,0.6); }
+.back-button svg { width:24px; height:24px; }
+
+/* Puls-animation */
+@keyframes pulse {
+  0% { transform: scale(1); box-shadow: 0 0 5px gold; }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px gold; }
+  100% { transform: scale(1); box-shadow: 0 0 5px gold; }
+}
+</style>
+</head>
+<body>
+
+<a href="spelare-klunk.html" class="back-button">
+  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15 18L9 12L15 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+</a>
+
+<div class="game-container">
+  <h1>Sipp Sipp – Partyspel</h1>
+  <div id="statement">Laddar påstående...</div>
+
+  <div class="players-list" id="playersList"></div>
+  <button id="submitBtn">✔</button>
+  <div id="scoreBoard"></div>
+</div>
+
+<script>
+const players = JSON.parse(localStorage.getItem("sippPlayers")) || [];
+if(players.length===0) alert("Inga spelare hittades! Gå tillbaka och lägg till spelare först.");
+
+const scores = {};
+players.forEach(p => scores[p]=0);
+
+const statements = [
+"Vem har kört ner i ett dike?\nDen dricker x klunkar",
+"{name}\ndricker x klunkar",
+"Vem har stannat uppe hela natten?\nDricker x klunkar",
+"x klunkar till den som heter {name}",
+"Vem har sjungit offentligt?\nDricker x klunkar",
+"x klunkar om du har spelat {game}",
+"Vem har gått vilse i staden?\nDricker x klunkar",
+"Vem har brutit något hemma?\nDricker x klunkar",
+"Vem har glömt något viktigt?\nDricker x klunkar",
+"Vem har gjort bort sig på sociala medier?\nDricker x klunkar",
+"Vem har somnat på jobbet/skolan?\nDricker x klunkar",
+"Vem har kört bil utan säkerhetsbälte?\nDricker x klunkar",
+"Vem har skickat ett pinsamt sms?\nDricker x klunkar",
+"Vem har ljugit om sin ålder?\nDricker x klunkar",
+"Vem har fuskat på ett spel?\nDricker x klunkar",
+"Vem har gråtit på offentliga plats?\nDricker x klunkar",
+"Vem har fått böter?\nDricker x klunkar",
+"Vem har dansat på bordet?\nDricker x klunkar",
+"Vem har sjungit karaoke?\nDricker x klunkar",
+"Vem har varit bakfull på jobbet/skolan?\nDricker x klunkar",
+"Vem har haft crush på läraren?\nDricker x klunkar",
+"Vem har skickat fel meddelande till fel person?\nDricker x klunkar",
+"Vem har gjort ett dåligt skämt?\nDricker x klunkar",
+"Vem har glömt någons namn?\nDricker x klunkar",
+"Vem har snarkat på offentliga platser?\nDricker x klunkar",
+"Vem har haft pinsamma kläder?\nDricker x klunkar",
+"Vem har tappat telefonen i toaletten?\nDricker x klunkar",
+"Vem har gått vilse på semester?\nDricker x klunkar",
+"Vem har skickat en snap till fel person?\nDricker x klunkar",
+"Vem har bråkat med en vän?\nDricker x klunkar",
+"Vem har ljugit för föräldrarna?\nDricker x klunkar",
+"Vem har somnat på tunnelbanan/bussen?\nDricker x klunkar",
+"Vem har fastnat i hissen?\nDricker x klunkar",
+"Vem har blivit kär på första dejten?\nDricker x klunkar",
+"Vem har glömt att betala räkning?\nDricker x klunkar",
+"Vem har ätit något konstigt för pengar?\nDricker x klunkar",
+"Vem har varit på ett jobbigt möte?\nDricker x klunkar",
+"Vem har sjungit i duschen?\nDricker x klunkar",
+"Vem har låtsats vara sjuk?\nDricker x klunkar",
+"Vem har skickat fel mail?\nDricker x klunkar",
+"Vem har använt någon annans konto?\nDricker x klunkar",
+"Vem har tappat bort nycklar?\nDricker x klunkar",
+"Vem har glömt paraplyet i regnet?\nDricker x klunkar",
+"Vem har skrivit ett konstigt sms?\nDricker x klunkar",
+"Vem har gått i fel riktning på gatan?\nDricker x klunkar",
+"Vem har ramlat på isen?\nDricker x klunkar",
+"Vem har ätit något som var för gammalt?\nDricker x klunkar",
+"Vem har retat en kollega?\nDricker x klunkar",
+"Vem har skickat pinsamt DM?\nDricker x klunkar",
+"Vem har lånat pengar som aldrig betalats tillbaka?\nDricker x klunkar",
+"Vem har dansat framför spegeln?\nDricker x klunkar",
+"Vem har snubblat offentligt?\nDricker x klunkar",
+"Vem har fått en konstig komplimang?\nDricker x klunkar",
+"Vem har varit på fel buss/tåg?\nDricker x klunkar",
+"Vem har sovit för länge?\nDricker x klunkar",
+"Vem har missat en deadline?\nDricker x klunkar",
+"Vem har skrivit på fel papper?\nDricker x klunkar",
+"Vem har ätit något och låtsats att det var gott?\nDricker x klunkar",
+"Vem har låtsats veta något de inte kunde?\nDricker x klunkar",
+"Vem har tappat bort plånboken?\nDricker x klunkar",
+"Vem har ringt fel person?\nDricker x klunkar",
+"Vem har gått in i fel rum?\nDricker x klunkar",
+"Vem har somnat på möte?\nDricker x klunkar",
+"Vem har fått choklad på fel ställe?\nDricker x klunkar",
+"Vem har glömt en födelsedag?\nDricker x klunkar",
+"Vem har sagt fel namn?\nDricker x klunkar",
+"Vem har ramlat i trappan?\nDricker x klunkar",
+"Vem har tappat mobilen i vattnet?\nDricker x klunkar",
+"Vem har lånat något utan att fråga?\nDricker x klunkar",
+"Vem har blivit utskälld offentligt?\nDricker x klunkar",
+"Vem har skickat pinsamt mejl?\nDricker x klunkar",
+"Vem har sjungit falskt offentligt?\nDricker x klunkar",
+"Vem har glömt en viktig detalj?\nDricker x klunkar",
+"Vem har sagt något pinsamt på fest?\nDricker x klunkar",
+"Vem har gått fel på tunnelbanan?\nDricker x klunkar",
+"Vem har tappat väskan?\nDricker x klunkar",
+"Vem har retat fel person?\nDricker x klunkar",
+"Vem har bråkat med familjen?\nDricker x klunkar",
+"Vem har skrattat åt fel tillfälle?\nDricker x klunkar",
+"Vem har skickat fel snap?\nDricker x klunkar",
+"Vem har glömt pass eller id?\nDricker x klunkar",
+"Vem har tappat pengar på marken?\nDricker x klunkar",
+"Vem har brutit något i hemmet?\nDricker x klunkar",
+"Vem har druckit något konstigt?\nDricker x klunkar",
+"Vem har ramlat på offentliga plats?\nDricker x klunkar",
+"Vem har somnat under lektion/möte?\nDricker x klunkar",
+"Vem har glömt nycklar hemma?\nDricker x klunkar",
+"Vem har skickat sms till fel person?\nDricker x klunkar",
+"Vem har sjungit offentligt utan anledning?\nDricker x klunkar",
+"Vem har skrivit konstigt på sociala medier?\nDricker x klunkar",
+"Vem har retat fel person?\nDricker x klunkar",
+"Vem har glömt att svara på viktigt mail?\nDricker x klunkar",
+"Vem har tappat bort något värdefullt?\nDricker x klunkar",
+"Vem har ätit något konstigt offentligt?\nDricker x klunkar",
+"Vem har blivit försenad flera gånger?\nDricker x klunkar",
+"Vem har retat en kollega?\nDricker x klunkar",
+"Vem har sagt något pinsamt i telefon?\nDricker x klunkar",
+"Vem har skrivit konstigt på chatten?\nDricker x klunkar",
+"Vem har varit pinsamt tyst?\nDricker x klunkar",
+"Vem har snubblat i trappan?\nDricker x klunkar",
+"Vem har tappat glasögon/solglasögon?\nDricker x klunkar",
+"Vem har ramlat i trädgården?\nDricker x klunkar",
+"Vem har skrattat åt fel skämt?\nDricker x klunkar",
+"Vem har tappat maten på golvet?\nDricker x klunkar",
+"Vem har glömt att hämta posten?\nDricker x klunkar",
+"Vem har skickat fel bild?\nDricker x klunkar",
+"Vem har varit pinsamt tyst i gruppen?\nDricker x klunkar",
+"Vem har tappat bort sin tröja?\nDricker x klunkar"
+];
+
+const games = ["Monopol", "Fia med knuff", "UNO", "Klunk", "Poker", 
+"Bingo", "Cluedo", "Twister", "Charader", "Sipp Sipp Play", "Pictionary", "Risk", "Settlers of Catan", "Trivial Pursuit", "Sipp Sipp", "Kubb"];
+
+const statementDiv = document.getElementById("statement");
+const playersListDiv = document.getElementById("playersList");
+const submitBtn = document.getElementById("submitBtn");
+const scoreBoardDiv = document.getElementById("scoreBoard");
+
+let currentX = 0;
+let lastGains = {};
+let lastStatement = ""; // 👈 för att undvika upprepning
+
+function renderPlayers() {
+  playersListDiv.innerHTML="";
+  players.forEach(p => {
+    const label = document.createElement("label");
+    label.innerHTML = `
+      <input type="checkbox" value="${p}">
+      <div class="checkbox-custom">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5 13L9 17L19 7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      ${p}
+    `;
+    playersListDiv.appendChild(label);
+
+    const input = label.querySelector("input");
+    const customBox = label.querySelector(".checkbox-custom");
+
+    input.addEventListener("change", () => {
+      if(input.checked) customBox.classList.add("checked");
+      else customBox.classList.remove("checked");
+    });
+  });
+}
+
+function updateScores() {
+  scoreBoardDiv.innerHTML="";
+  const maxScore = Math.max(...Object.values(scores));
+
+  players.forEach(p=>{
+    const div=document.createElement("div");
+    div.className="score-item";
+    div.innerHTML=`${p}: ${scores[p]} poäng`;
+
+    if(scores[p] === maxScore && maxScore > 0){
+      div.classList.add("winner");
+    }
+
+    if(lastGains[p]>0){
+      const gainSpan=document.createElement("span");
+      gainSpan.className="score-change";
+      gainSpan.textContent=`+${lastGains[p]}`;
+      div.appendChild(gainSpan);
+    }
+    scoreBoardDiv.appendChild(div);
+  });
+}
+
+function newStatement(){
+  statementDiv.classList.add("fade-out");
+  setTimeout(() => {
+    let statement;
+    do {
+      statement = statements[Math.floor(Math.random() * statements.length)];
+    } while (statement === lastStatement); // 👈 undvik samma 2 ggr i rad
+    lastStatement = statement;
+
+    const x = Math.floor(Math.random() * 5) + 1;
+
+    if(statement.includes("x")) statement = statement.replace(/x/g, x);
+    if(statement.includes("{name}") && players.length > 0){
+      const randomPlayer = players[Math.floor(Math.random() * players.length)];
+      statement = statement.replace(/{name}/g, randomPlayer);
+    }
+    if(statement.includes("{game}")) {
+      const randomGame = games[Math.floor(Math.random() * games.length)];
+      statement = statement.replace(/{game}/g, randomGame);
+    }
+
+    statementDiv.innerHTML = statement.replace(/\n/g, "<br>");
+
+    document.querySelectorAll("#playersList input[type=checkbox]").forEach(cb => cb.checked = false);
+    document.querySelectorAll(".checkbox-custom").forEach(box => box.classList.remove("checked"));
+
+    statementDiv.classList.remove("fade-out");
+    statementDiv.classList.add("fade-in");
+    setTimeout(() => statementDiv.classList.remove("fade-in"), 500);
+
+    currentX = x;
+    lastGains = {};
+  }, 500);
+}
+
+submitBtn.addEventListener("click", () => {
+  const selected=[];
+  document.querySelectorAll("#playersList input[type=checkbox]:checked")
+    .forEach(cb=>selected.push(cb.value));
+
+  // Om ingen är vald → gå vidare utan poäng
+  if(selected.length === 0){
+    lastGains = {}; // inga +poäng att visa
+    updateScores();
+    newStatement();
+    return;
+  }
+
+  // Annars ge poäng som vanligt
+  selected.forEach(p=>{
+    scores[p]+=currentX;
+    lastGains[p]=currentX;
+  });
+  updateScores();
+  newStatement();
+});
+
+
+renderPlayers();
+updateScores();
+newStatement();
+</script>
+</body>
+</html>
