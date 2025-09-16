@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sipp Sipp Play – Lägg till spelare</title>
+<style>
+  html, body {height:100%; margin:0; padding:0; font-family:Arial,sans-serif; background:linear-gradient(135deg,#ff8a00,#e52e71); color:white;}
+  .container {height:100%; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px; position:relative;}
+  header {font-size:2.5rem; font-weight:bold; margin-bottom:30px;}
+  label {font-size:1.2rem; margin-bottom:10px; display:block;}
+  input[type="text"] {padding:10px; font-size:1rem; border-radius:10px; border:none; margin-right:10px; width:200px;}
+  button {padding:10px 20px; font-size:1rem; border-radius:10px; border:none; background-color:white; color:#e52e71; font-weight:bold; cursor:pointer; transition:0.3s;}
+  button:hover {background-color:#ff8a00; color:white;}
+  .player-list {margin-top:30px; text-align:center; width:250px;}
+  .player-item {display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.2); padding:8px 12px; margin-bottom:5px; border-radius:10px;}
+  .player-item button {padding:5px 10px; font-size:0.9rem; background-color:#e52e71; color:white;}
+  .player-item button:hover {background-color:#ff8a00;}
+  #startBtn {display:none; margin-top:20px; padding:10px 25px; border-radius:10px; background-color:white; color:#e52e71; font-weight:bold; text-decoration:none; transition:0.3s;}
+  #startBtn:hover {background-color:#ff8a00; color:white;}
+  .back-button {position:absolute; top:20px; left:20px; display:flex; align-items:center; justify-content:center; width:50px; height:50px; background: rgba(0,0,0,0.3); border-radius:12px; transition: background 0.3s; text-decoration:none; z-index:10;}
+  .back-button:hover { background: rgba(0,0,0,0.6); }
+  .back-button svg { width:24px; height:24px; }
+  @media(max-width:400px){input[type="text"]{width:150px; margin-bottom:10px;} button{width:80px;} #startBtn{width:80px;}}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Tillbakaknapp -->
+  <a href="index.html" class="back-button">
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M15 18L9 12L15 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </a>
+
+  <header>Sipp Sipp Play</header>
+
+  <label for="playerName">Lägg till spelare:</label>
+  <div>
+    <input type="text" id="playerName" placeholder="Skriv namn">
+    <button id="addBtn">OK</button>
+  </div>
+
+  <div class="player-list" id="playerList"></div>
+
+  <a href="spel-klunk.html" id="startBtn">START</a>
+</div>
+
+<script>
+  const input = document.getElementById("playerName");
+  const addBtn = document.getElementById("addBtn");
+  const playerList = document.getElementById("playerList");
+  const startBtn = document.getElementById("startBtn");
+
+  // Hämta spelare från localStorage eller tom array
+  let players = JSON.parse(localStorage.getItem("sippPlayers")) || [];
+
+  function savePlayers() {
+    localStorage.setItem("sippPlayers", JSON.stringify(players));
+  }
+
+  function updateStartButton() {
+    startBtn.style.display = players.length > 0 ? "inline-block" : "none";
+  }
+
+  function renderPlayers() {
+    playerList.innerHTML = "";
+    players.forEach((name, index) => {
+      const playerDiv = document.createElement("div");
+      playerDiv.classList.add("player-item");
+
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = name;
+
+      const removeBtn = document.createElement("button");
+      removeBtn.textContent = "X";
+      removeBtn.addEventListener("click", () => {
+        players.splice(index,1);
+        savePlayers();
+        renderPlayers();
+        updateStartButton();
+      });
+
+      playerDiv.appendChild(nameSpan);
+      playerDiv.appendChild(removeBtn);
+      playerList.appendChild(playerDiv);
+    });
+  }
+
+  function addPlayer() {
+    const name = input.value.trim();
+    if(name !== "" && !players.includes(name)) {
+      players.push(name);
+      savePlayers();
+      renderPlayers();
+      input.value = "";
+      input.focus();
+      updateStartButton();
+    }
+  }
+
+  addBtn.addEventListener("click", addPlayer);
+  input.addEventListener("keydown", e => { if(e.key==="Enter") addPlayer(); });
+
+  // Initiera sidan
+  renderPlayers();
+  updateStartButton();
+</script>
+</body>
+</html>
