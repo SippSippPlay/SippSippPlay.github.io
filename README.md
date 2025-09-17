@@ -1,7 +1,9 @@
+<!DOCTYPE html>
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sipp Sipp Play</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -13,12 +15,14 @@
     }
 
     .container {
-      height: 100vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       gap: 1rem;
+      padding: 1rem;
+      box-sizing: border-box;
     }
 
     h1 {
@@ -48,6 +52,25 @@
     .btn:hover {
       background: #ff8a00;
       color: white;
+    }
+
+    /* Mobilanpassning */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      p {
+        font-size: 1rem;
+        max-width: 90%;
+      }
+
+      .btn {
+        font-size: 1rem;
+        padding: 12px 20px;
+        width: 100%;
+        max-width: 300px;
+      }
     }
   </style>
 </head>
