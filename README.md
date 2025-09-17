@@ -1,336 +1,83 @@
-
 <html lang="sv">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #ff8a00, #e52e71);
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-    flex-direction: column;
-  }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #ff8a00, #e52e71);
+      color: white;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
 
-  h1 { margin: 10px; }
+    .container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
 
-  .board {
-    display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    gap: 0.5vw;
-    width: 95vw;
-    max-width: 800px;
-    aspect-ratio: 10 / 4;
-    margin-bottom: 20px;
-  }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
 
-  .cell {
-    background: rgba(255,255,255,0.2);
-    border-radius: 10%;
-    position: relative;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: bold;
-    font-size: min(2.5vw, 0.9rem);
-  }
+    p {
+      font-size: 1.2rem;
+      max-width: 500px;
+      margin-bottom: 2rem;
+    }
 
-  .cell::before {
-    content: "";
-    display: block;
-    padding-top: 100%; /* kvadratiska celler */
-  }
+    .btn {
+      background: white;
+      color: #e52e71;
+      padding: 15px 30px;
+      border-radius: 30px;
+      text-decoration: none;
+      font-size: 1.2rem;
+      font-weight: bold;
+      transition: 0.3s;
+      display: inline-block;
+      margin: 5px 0;
+    }
 
-  .player {
-    width: 30%;
-    height: 30%;
-    border-radius: 40%;
-    position: absolute;
-    border: 1px solid rgb(0, 0, 0);
-  }
+    .btn:hover {
+      background: #ff8a00;
+      color: white;
+    }
 
-  .bounce {
-    animation: bounce 0.3s ease forwards;
-  }
+    /* Mobilanpassning */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
 
-  @keyframes bounce {
-    0% { transform: translateY(0); }
-    50% { transform: translateY(-15%); }
-    100% { transform: translateY(0); }
-  }
+      p {
+        font-size: 1rem;
+        max-width: 90%;
+      }
 
-  button {
-    padding: 12px 24px;
-    font-size: 1.3rem;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    background: white;
-    color: #e52e71;
-    font-weight: bold;
-    transition:0.3s;
-  }
-  button:hover { background: #ff8a00; color: white; }
-  button:disabled { opacity: 0.6; cursor: not-allowed; }
-
-  #info { margin-top: 12px; font-size: 1.2rem; text-align: center; }
-  .player-name { font-weight: bold; padding: 2px 6px; border-radius: 6px; color: white; display: inline-block; }
-  .turn-box, .roll-box { margin: 5px 0; font-size: 1.1rem; }
-
-  .back-button {
-    position: absolute; top: 20px; left: 20px;
-    display: flex; align-items: center; justify-content: center;
-    width: 50px; height: 50px; background: rgba(0,0,0,0.3); border-radius: 12px;
-    transition: background 0.3s; text-decoration: none; z-index: 10;
-  }
-  .back-button:hover { background: rgba(0,0,0,0.6); }
-  .back-button svg { width: 24px; height: 24px; }
-
-  /* Popup-stil */
-  .popup-overlay {
-    position: fixed; top:0; left:0; width:100%; height:100%;
-    background: rgba(0,0,0,0.6);
-    display: none; justify-content: center; align-items: center;
-    z-index: 100;
-  }
-  .popup-content {
-    background: #1e1e2f;
-    color: #ff8a00;
-    padding: 30px;
-    border-radius: 20px;
-    max-width: 360px;
-    text-align: center;
-    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', cursive;
-    font-size: 1.4rem;
-    font-weight: bold;
-    text-shadow: 1px 1px 3px black;
-    animation: glow 1.5s infinite alternate;
-  }
-  @keyframes glow {
-    from { box-shadow: 0 0 10px #ff8a00, 0 0 20px #e52e71; }
-    to { box-shadow: 0 0 25px #ff8a00, 0 0 40px #e52e71; }
-  }
-  .popup-content button {
-    margin-top: 20px;
-    background: #ff8a00;
-    color: rgb(0, 0, 0);
-    border-radius: 12px;
-    padding: 12px 22px;
-    font-weight: bold;
-    font-family: 'Arial Black', sans-serif;
-    cursor: pointer;
-    transition: 0.3s;
-  }
-  .popup-content button:hover { background: #e52e71; }
-</style>
+      .btn {
+        font-size: 1rem;
+        padding: 12px 20px;
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+  </style>
 </head>
 <body>
-
-<a href="sippsipp-spelare.html" class="back-button">
-  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M15 18L9 12L15 6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-</a>
-
-<h1>Sipp Sipp – Brädspel</h1>
-<div class="board" id="board"></div>
-<button id="rollBtn">Kasta tärning</button>
-<div id="info"></div>
-
-<!-- Popup -->
-<div class="popup-overlay" id="popup">
-  <div class="popup-content" id="popupContent">
-    <div id="popupText"></div>
-    <button id="closePopup">Stäng</button>
+  <div class="container">
+    <h1>Sipp Sipp Play</h1>
+    <p>Välkommen till Sipp Sipp Play <br> En plats där du kan spela Sipp Sipp direkt i webbläsaren!</p>
+    <a href="spelare-klunk.html" class="btn">Spela: Klunk</a>
+    <a href="sippsipp-spelare.html" class="btn">Spela: Sipp Sipp</a>
   </div>
-</div>
-
-<script>
-const rows = 4;
-const cols = 10;
-const board = document.getElementById("board");
-
-// Skapa brädet
-const cells = [];
-for(let r=0;r<rows;r++){
-  for(let c=0;c<cols;c++){
-    const cell = document.createElement("div");
-    cell.classList.add("cell");
-    board.appendChild(cell);
-    cells.push(cell);
-  }
-}
-cells[0].textContent = "START";
-
-// Hämta spelare
-const storedPlayers = JSON.parse(localStorage.getItem("sippPlayers")) || [];
-const playerColors = ["#ff0000","#00ff00","#0000ff","#ffff00","#ff00ff","#00ffff","#ff8000","#8000ff","#00ff80"];
-
-const players = storedPlayers.map((p,i)=>{
-  const player = { name: p.name, color: playerColors[i % playerColors.length], pos: 1 }; 
-  const div = document.createElement("div");
-  div.classList.add("player");
-  div.style.background = player.color;
-  cells[player.pos-1].appendChild(div);
-  player.element = div;
-  return player;
-});
-
-let turn = 0;
-let gameOver = false;
-const info = document.getElementById("info");
-const rollBtn = document.getElementById("rollBtn");
-
-const challengeTexts = {
-  2: "Drick 1 klunk.",
-  3: "Alla dricker 2 klunkar.",
-  4: "Välj en spelare som dricker 3 klunkar.",
-  5: "Utmaning! 'Jag har aldrig...' – alla som gjort det dricker 1 klunk.",
-  6: "Thunder! Spela en runda, förlorare dricker 2 klunkar.",
-  7: "Drick 2 klunkar.",
-  8: "Välj en spelare som dricker 4 klunk.",
-  9: "Alla dricker 5 klunk.",
-  10: "Utmaning! Drick 3 klunkar eller sjung en bit på en låt.",
-  11: "Dela ut 2 klunkar till valfri spelare.",
-  12: "Sanning eller konsekvens! Misslyckas? Drick 2 klunkar.",
-  13: "Drick 3 klunkar.",
-  14: "Välj 2 spelare som dricker 1 klunk vardera.",
-  15: "Utmaning! Håll en mini-tävling, förloraren dricker 1 shot.",
-  16: "Utmaning! Välj en spelare att köra sten saxpåse med, förloraren dricker 3 klunkar.",
-  17: "Välj en spelare som dricker 2 klunkar.",
-  18: "Vattenfall! Alla börjar dricka, du kan sluta när personen till höger om dig slutar.",
-  19: "Utmaning! 'Jag har aldrig...' – alla som gjort det dricker 1 klunk.",
-  20: "Alla dricker 1 klunk.",
-  21: "Välj en spelare som dricker 3 klunkar.",
-  22: "Higher or Lower! Misslyckas? Drick 1 shot.",
-  23: "Drick 2 klunkar.",
-  24: "Dela ut 1 klunk till valfri spelare.",
-  25: "Utmaning! Gör en kort charad, vinnaren delar ut 1 shot.",
-  26: "Alla dricker 2 klunkar.",
-  27: "Välj en spelare som dricker 6 klunkar.",
-  28: "Utmaning! Välj en spelare att tävla med, förloraren dricker 3 klunkar.",
-  29: "Utmaning! 'Jag har aldrig...' – alla som gjort det dricker 1 klunk.",
-  30: "Alla dricker 2 klunkar.",
-  31: "Välj en spelare som dricker 2 klunkar.",
-  32: "Kategori! Misslyckas? Drick 3 klunkar",
-  33: "Drick 1 klunk.",
-  34: "Dela ut 10 klunkar till valfria spelare.",
-  35: "Utmaning! Håll en mini-tävling, förloraren dricker 3 klunkar.",
-  36: "Alla dricker 1 klunk.",
-  37: "Välj en spelare som dricker 1 klunk.",
-  38: "Drick 2 klunkar.",
-  39: "Utmaning! Välj en spelare att tävla med, förloraren dricker 5 klunkar.",
-  40: "GRATTIS! Du har nått slutet och vunnit spelet!"
-};
-
-const popup = document.getElementById("popup");
-const popupText = document.getElementById("popupText");
-const closePopup = document.getElementById("closePopup");
-
-function renderPlayers(){
-  cells.forEach((c,i)=>{
-    c.textContent = (i===0) ? "START" : "";
-    const cellPlayers = players.filter(p=>p.pos === i+1);
-    cellPlayers.forEach((p,index)=>{
-      const token = p.element;
-      token.style.left = (index%3)*30 + "%";
-      token.style.top = Math.floor(index/3)*30 + "%";
-      c.appendChild(token);
-    });
-  });
-}
-
-function updateInfo(rolled=null){
-  const current = players[turn];
-  const next = players[(turn+1)%players.length];
-  let html = "";
-  if(rolled===null){
-    html = `<div class="turn-box"><span class="player-name" style="background:${current.color}">${current.name}</span> är på tur</div>`;
-  } else {
-    html = `<div class="roll-box"><span class="player-name" style="background:${current.color}">${current.name}</span> kastade ${rolled}!</div>`;
-    html += `<div class="turn-box">Nästa tur: <span class="player-name" style="background:${next.color}">${next.name}</span></div>`;
-  }
-  info.innerHTML = html;
-}
-
-function closePopupFunc(){
-  popup.style.display = "none";
-  if(gameOver){
-    window.location.href = "sippsipp-spelare.html";
-  } else {
-    // byt tur först när popup stängs
-    turn = (turn + 1) % players.length;
-    updateInfo();
-    rollBtn.disabled = false;
-  }
-}
-closePopup.addEventListener("click", closePopupFunc);
-
-function rollDice(){
-  if(popup.style.display === "flex" || gameOver) return;
-
-  rollBtn.disabled = true;
-
-  const currentPlayer = players[turn];
-  const roll = Math.floor(Math.random()*6)+1;
-  const targetPos = Math.min(currentPlayer.pos + roll, 40);
-  let steps = targetPos - currentPlayer.pos;
-
-  function moveStep() {
-    if(steps === 0) {
-      renderPlayers();
-      updateInfo(roll);
-
-      if(currentPlayer.pos === 40){
-        gameOver = true;
-        popupText.textContent = `🎉 GRATTIS! ${currentPlayer.name} har nått slutet och vunnit spelet! 🍻`;
-        popup.style.display = "flex";
-        return;
-      }
-
-      if(challengeTexts[currentPlayer.pos]){
-        popupText.textContent = challengeTexts[currentPlayer.pos];
-        popup.style.display = "flex";
-        return;
-      }
-
-      // ingen popup -> byt tur direkt
-      turn = (turn + 1) % players.length;
-      rollBtn.disabled = false;
-      updateInfo();
-      return;
-    }
-
-    currentPlayer.pos++;
-    const token = currentPlayer.element;
-    token.classList.add("bounce");
-    renderPlayers();
-    setTimeout(()=>{ token.classList.remove("bounce"); }, 300);
-    steps--;
-    setTimeout(moveStep, 300);
-  }
-
-  moveStep();
-}
-
-rollBtn.addEventListener("click", rollDice);
-
-document.addEventListener("keydown",(e)=>{
-  if(e.key === "Enter"){
-    if(popup.style.display === "flex"){
-      closePopupFunc();
-    } else {
-      rollDice();
-    }
-  }
-});
-
-renderPlayers();
-updateInfo();
-</script>
 </body>
 </html>
