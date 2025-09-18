@@ -14,6 +14,7 @@ body {
   align-items:center;
   min-height:100vh;
   color:white;
+  flex-direction: column;
 }
 
 .game-container {
@@ -79,7 +80,7 @@ h1 { margin-bottom:20px; }
   display: block;
 }
 
-#submitBtn {
+#submitBtn, #resetBtn {
   padding:15px 30px;
   font-size:1.2rem;
   background:#fff;
@@ -89,8 +90,9 @@ h1 { margin-bottom:20px; }
   font-weight:bold;
   cursor:pointer;
   transition:0.3s;
+  margin-top:10px;
 }
-#submitBtn:hover { background:#ff8a00; color:white; }
+#submitBtn:hover, #resetBtn:hover { background:#ff8a00; color:white; }
 
 #scoreBoard { margin-top:20px; text-align:center; }
 .score-item {
@@ -202,6 +204,7 @@ h1 { margin-bottom:20px; }
   <div class="players-list" id="playersList"></div>
   <button id="submitBtn">✔</button>
   <div id="scoreBoard"></div>
+  <button id="resetBtn">Återställ poäng</button>
 </div>
 
 <script>
@@ -351,6 +354,7 @@ const statementDiv = document.getElementById("statement");
 const playersListDiv = document.getElementById("playersList");
 const submitBtn = document.getElementById("submitBtn");
 const scoreBoardDiv = document.getElementById("scoreBoard");
+const resetBtn = document.getElementById("resetBtn");
 
 let remainingStatements = [...statements];
 let currentX = 0;
@@ -440,6 +444,15 @@ submitBtn.addEventListener("click",()=>{
   const selected=[];
   document.querySelectorAll("#playersList input[type=checkbox]:checked").forEach(cb=>selected.push(cb.value));
   selected.forEach(p=>{ scores[p]+=currentX; lastGains[p]=currentX; });
+  showNextStatement();
+});
+
+// Återställ-knappen
+resetBtn.addEventListener("click",()=>{
+  players.forEach(p => scores[p]=0);
+  lastGains={};
+  remainingStatements=[...statements];
+  updateScores();
   showNextStatement();
 });
 
