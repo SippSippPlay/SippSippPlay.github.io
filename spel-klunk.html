@@ -40,7 +40,6 @@ h1 { margin-bottom:20px; }
 
 .players-list { text-align:left; margin-bottom:20px; }
 
-/* Snygga markeringar */
 .players-list label {
   display: flex;
   align-items: center;
@@ -49,9 +48,7 @@ h1 { margin-bottom:20px; }
   user-select: none;
 }
 
-.players-list input[type="checkbox"] {
-  display: none;
-}
+.players-list input[type="checkbox"] { display: none; }
 
 .players-list .checkbox-custom {
   width: 25px;
@@ -105,18 +102,40 @@ h1 { margin-bottom:20px; }
   position:relative;
 }
 
-/* Förändring: vinnare */
-.winner {
+.winner-gold {
   border: 2px solid gold;
   font-weight: bold;
   background: rgba(255,215,0,0.3);
-  animation: pulse 1.5s infinite;
+  animation: pulse-gold 1.5s infinite;
+}
+.winner-silver {
+  border: 2px solid silver;
+  font-weight: bold;
+  background: rgba(192,192,192,0.3);
+  animation: pulse-silver 1.5s infinite;
+}
+.winner-bronze {
+  border: 2px solid #cd7f32;
+  font-weight: bold;
+  background: rgba(205,127,50,0.3);
+  animation: pulse-bronze 1.5s infinite;
 }
 
 .score-change {
-  font-size:0.9rem;
+  font-size:1rem;
   color:#00ff00;
   margin-left:6px;
+  position:absolute;
+  right:10px;
+  top:50%;
+  transform:translateY(-50%);
+  animation: jump 1s ease-out forwards;
+}
+
+@keyframes jump {
+  0% { opacity:1; transform: translateY(0); }
+  50% { opacity:1; transform: translateY(-20px); }
+  100% { opacity:0; transform: translateY(-40px); }
 }
 
 .back-button {
@@ -137,11 +156,35 @@ h1 { margin-bottom:20px; }
 .back-button:hover { background: rgba(0,0,0,0.6); }
 .back-button svg { width:24px; height:24px; }
 
-/* Puls-animation */
-@keyframes pulse {
+@keyframes pulse-gold {
   0% { transform: scale(1); box-shadow: 0 0 5px gold; }
   50% { transform: scale(1.05); box-shadow: 0 0 20px gold; }
   100% { transform: scale(1); box-shadow: 0 0 5px gold; }
+}
+@keyframes pulse-silver {
+  0% { transform: scale(1); box-shadow: 0 0 5px silver; }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px silver; }
+  100% { transform: scale(1); box-shadow: 0 0 5px silver; }
+}
+@keyframes pulse-bronze {
+  0% { transform: scale(1); box-shadow: 0 0 5px #cd7f32; }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px #cd7f32; }
+  100% { transform: scale(1); box-shadow: 0 0 5px #cd7f32; }
+}
+
+.confetti {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  top: 0;
+  animation: fall 3s linear infinite;
+  opacity: 0.8;
+  z-index: 9999;
+}
+
+@keyframes fall {
+  0% { transform: translateY(0) rotate(0deg); }
+  100% { transform: translateY(100vh) rotate(360deg); }
 }
 </style>
 </head>
@@ -156,7 +199,6 @@ h1 { margin-bottom:20px; }
 <div class="game-container">
   <h1>Sipp Sipp – Partyspel</h1>
   <div id="statement">Laddar påstående...</div>
-
   <div class="players-list" id="playersList"></div>
   <button id="submitBtn">✔</button>
   <div id="scoreBoard"></div>
@@ -167,7 +209,7 @@ const players = JSON.parse(localStorage.getItem("sippPlayers")) || [];
 if(players.length===0) alert("Inga spelare hittades! Gå tillbaka och lägg till spelare först.");
 
 const scores = {};
-players.forEach(p => scores[p]=0);
+players.forEach(p => scores[p] = 0);
 
 const statements = [
 "Vem har kört bil full? \nDen dricker x klunkar",
@@ -305,17 +347,14 @@ const statements = [
 "Den som ringde någon sist\nDelar ut x klunkar"
 ];
 
-const games = ["Monopol", "Fia med knuff", "UNO", "Klunk", "Poker", 
-"Bingo", "Cluedo", "Twister", "Charader", "Sipp Sipp Play", "Pictionary", "Risk", "Settlers of Catan", "Trivial Pursuit", "Sipp Sipp", "Kubb"];
-
 const statementDiv = document.getElementById("statement");
 const playersListDiv = document.getElementById("playersList");
 const submitBtn = document.getElementById("submitBtn");
 const scoreBoardDiv = document.getElementById("scoreBoard");
 
+let remainingStatements = [...statements];
 let currentX = 0;
 let lastGains = {};
-let lastStatement = ""; // 👈 för att undvika upprepning
 
 function renderPlayers() {
   playersListDiv.innerHTML="";
@@ -331,102 +370,82 @@ function renderPlayers() {
       ${p}
     `;
     playersListDiv.appendChild(label);
-
     const input = label.querySelector("input");
     const customBox = label.querySelector(".checkbox-custom");
-
-    input.addEventListener("change", () => {
-      if(input.checked) customBox.classList.add("checked");
-      else customBox.classList.remove("checked");
-    });
+    input.addEventListener("change", () => customBox.classList.toggle("checked", input.checked));
   });
 }
 
 function updateScores() {
   scoreBoardDiv.innerHTML="";
-  const maxScore = Math.max(...Object.values(scores));
-
-  players.forEach(p=>{
+  const sortedScores = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
+  sortedScores.forEach((entry,i)=>{
     const div=document.createElement("div");
     div.className="score-item";
-    div.innerHTML=`${p}: ${scores[p]} poäng`;
-
-    if(scores[p] === maxScore && maxScore > 0){
-      div.classList.add("winner");
-    }
-
-    if(lastGains[p]>0){
+    if(i===0) div.classList.add("winner-gold");
+    else if(i===1) div.classList.add("winner-silver");
+    else if(i===2) div.classList.add("winner-bronze");
+    div.innerHTML=`${entry[0]}: ${entry[1]} poäng`;
+    if(lastGains[entry[0]]>0){
       const gainSpan=document.createElement("span");
       gainSpan.className="score-change";
-      gainSpan.textContent=`+${lastGains[p]}`;
+      gainSpan.textContent=`+${lastGains[entry[0]]}`;
       div.appendChild(gainSpan);
     }
     scoreBoardDiv.appendChild(div);
   });
 }
 
-function newStatement(){
+function showNextStatement() {
+  if(remainingStatements.length===0) { showResults(); return; }
   statementDiv.classList.add("fade-out");
-  setTimeout(() => {
-    let statement;
-    do {
-      statement = statements[Math.floor(Math.random() * statements.length)];
-    } while (statement === lastStatement); // 👈 undvik samma 2 ggr i rad
-    lastStatement = statement;
-
-    const x = Math.floor(Math.random() * 5) + 1;
-
-    if(statement.includes("x")) statement = statement.replace(/x/g, x);
-    if(statement.includes("{name}") && players.length > 0){
-      const randomPlayer = players[Math.floor(Math.random() * players.length)];
-      statement = statement.replace(/{name}/g, randomPlayer);
+  setTimeout(()=>{
+    const idx=Math.floor(Math.random()*remainingStatements.length);
+    let statement=remainingStatements.splice(idx,1)[0];
+    currentX=Math.floor(Math.random()*5)+1;
+    if(statement.includes("x")) statement=statement.replace(/x/g,currentX);
+    if(statement.includes("{name}") && players.length>0){
+      const randomPlayer = players[Math.floor(Math.random()*players.length)];
+      statement = statement.replace(/{name}/g,randomPlayer);
     }
-    if(statement.includes("{game}")) {
-      const randomGame = games[Math.floor(Math.random() * games.length)];
-      statement = statement.replace(/{game}/g, randomGame);
-    }
-
-    statementDiv.innerHTML = statement.replace(/\n/g, "<br>");
-
-    document.querySelectorAll("#playersList input[type=checkbox]").forEach(cb => cb.checked = false);
-    document.querySelectorAll(".checkbox-custom").forEach(box => box.classList.remove("checked"));
-
+    statementDiv.innerHTML=statement.replace(/\n/g,"<br>");
+    document.querySelectorAll("#playersList input[type=checkbox]").forEach(cb=>cb.checked=false);
+    document.querySelectorAll(".checkbox-custom").forEach(box=>box.classList.remove("checked"));
     statementDiv.classList.remove("fade-out");
     statementDiv.classList.add("fade-in");
-    setTimeout(() => statementDiv.classList.remove("fade-in"), 500);
-
-    currentX = x;
-    lastGains = {};
-  }, 500);
+    setTimeout(()=>statementDiv.classList.remove("fade-in"),500);
+    lastGains={};
+    updateScores();
+  },500);
 }
 
-submitBtn.addEventListener("click", () => {
-  const selected=[];
-  document.querySelectorAll("#playersList input[type=checkbox]:checked")
-    .forEach(cb=>selected.push(cb.value));
-
-  // Om ingen är vald → gå vidare utan poäng
-  if(selected.length === 0){
-    lastGains = {}; // inga +poäng att visa
-    updateScores();
-    newStatement();
-    return;
-  }
-
-  // Annars ge poäng som vanligt
-  selected.forEach(p=>{
-    scores[p]+=currentX;
-    lastGains[p]=currentX;
-  });
+function showResults(){
+  statementDiv.innerHTML="<h2>Spelet är slut!</h2>";
+  playersListDiv.innerHTML="";
+  submitBtn.innerText="Tillbaka till menyn";
   updateScores();
-  newStatement();
-});
+  for(let i=0;i<100;i++){
+    const c=document.createElement("div");
+    c.className="confetti";
+    c.style.left=Math.random()*100+"%";
+    c.style.backgroundColor=`hsl(${Math.random()*360},100%,50%)`;
+    c.style.animationDuration=(Math.random()*3+2)+"s";
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),5000);
+  }
+  submitBtn.onclick=()=>window.location.href="spelare-klunk.html";
+}
 
+submitBtn.addEventListener("click",()=>{
+  const selected=[];
+  document.querySelectorAll("#playersList input[type=checkbox]:checked").forEach(cb=>selected.push(cb.value));
+  selected.forEach(p=>{ scores[p]+=currentX; lastGains[p]=currentX; });
+  showNextStatement();
+});
 
 renderPlayers();
 updateScores();
-newStatement();
+showNextStatement();
 </script>
 </body>
 </html>
-
