@@ -126,6 +126,7 @@
   }
   .popup-content button:hover { background: #e52e71; }
 
+  /* Musikkontroller */
   #musicControls {
     position: fixed;
     top: 10px;
@@ -143,12 +144,11 @@
   #musicControls input[type="range"] { cursor:pointer; width: 120px; }
   #musicControls span { font-size:0.8rem; white-space: nowrap; }
 
+  /* Historik */
   #history {
-    position: fixed;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
+    position: relative;
+    margin-top: 10px;
+    width: 95%;
     max-width: 600px;
     background: rgba(0,0,0,0.5);
     padding: 8px;
@@ -158,10 +158,19 @@
     font-size: 0.9rem;
   }
 
+  /* Mobilanpassning */
   @media (max-width: 600px){
     .board { grid-template-columns: repeat(5, 1fr); aspect-ratio: 5 / 8; }
-    #musicControls { width: 90%; top:auto; bottom: 10px; right:50%; transform: translateX(50%); flex-direction:row; flex-wrap:wrap; justify-content:center; }
+    #musicControls {
+      top:auto; bottom:0; right:0; left:0;
+      transform:none;
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      padding: 6px 0;
+    }
     #musicControls input[type="range"] { width: 80px; }
+    #history { max-height: 120px; width: 95%; }
   }
 </style>
 </head>
@@ -201,6 +210,7 @@
 </div>
 
 <script>
+/* --- Bräde och spelare --- */
 const colors = ["#ff9999","#ffcc99","#ffff99","#ccff99","#99ff99","#99ffcc","#99ffff","#99ccff","#9999ff","#cc99ff"];
 const rows = 4, cols = 10, board = document.getElementById("board");
 const cells = [];
@@ -219,7 +229,6 @@ for(let r=0;r<rows;r++){
     cells.push(cell);
   }
 }
-
 cells[0].style.backgroundColor = "#00ff00";
 cells[cells.length-1].style.backgroundColor = "#ffb700";
 cells[0].textContent = "START";
@@ -246,19 +255,7 @@ const popupText=document.getElementById("popupText");
 const closePopup=document.getElementById("closePopup");
 const historyBox = document.getElementById("history");
 
-const challengeTexts = {
-  2:"Drick 1 klunk.",3:"Alla dricker 2 klunkar.",4:"Välj en spelare som dricker 3 klunkar.",5:"Utmaning! 'Jag har aldrig.. alla som gjort det dricker 1 klunk.",
-  6:"Thunder! Spela en runda, förlorare dricker 2 klunkar.",7:"Drick 2 klunkar.",8:"Välj en spelare som dricker 4 klunk.",9:"Alla dricker 5 klunk.",
-  10:"Utmaning! Drick 3 klunkar eller sjung en bit på en låt.",11:"Dela ut 2 klunkar till valfri spelare.",12:"Sanning eller konsekvens! Misslyckas? Drick 2 klunkar.",
-  13:"Drick 3 klunk.",14:"Välj 2 spelare som dricker 1 klunk vardera.",15:"Utmaning! Håll en mini-tävling, förloraren dricker 1 shot.",
-  16:"Utmaning! Välj en spelare att köra sten saxpåse med, förloraren dricker 3 klunkar.",17:"Välj en spelare som dricker 2 klunkar.",18:"Vattenfall! Alla börjar dricka, du kan sluta när personen till höger om dig slutar.",
-  19:"Utmaning! 'Jag har aldrig.. alla som gjort det dricker 1 klunk.",20:"Alla dricker 1 klunk.",21:"Välj en spelare som dricker 3 klunkar.",22:"Higher or Lower! Misslyckas? Drick 1 shot.",
-  23:"Drick 2 klunkar.",24:"Dela ut 1 klunk till valfri spelare.",25:"Utmaning! Gör en kort charad, vinnaren delar ut 1 shot.",26:"Alla dricker 2 klunkar.",
-  27:"Välj en spelare som dricker 6 klunkar.",28:"Utmaning! Välj en spelare att tävla med, förloraren dricker 3 klunkar.",29:"Utmaning! 'Jag har aldrig.. alla som gjort det dricker 1 klunk.",
-  30:"Alla dricker 2 klunkar.",31:"Välj en spelare som dricker 2 klunkar.",32:"Kategori! Misslyckas? Drick 3 klunk",33:"Drick 1 klunk.",
-  34:"Dela ut 10 klunkar till valfria spelare.",35:"Utmaning! Håll en mini-tävling, förloraren dricker 3 klunkar.",36:"Alla dricker 1 klunk.",37:"Välj en spelare som dricker 1 klunk.",
-  38:"Drick 2 klunkar.",39:"Utmaning! Välj en spelare att tävla med, förloraren dricker 5 klunk.",40:"GRATTIS! Du har nått slutet och vunnit spelet!"
-};
+const challengeTexts = {2:"Drick 1 klunk.",3:"Alla dricker 2 klunkar.",4:"Välj en spelare som dricker 3 klunkar.",5:"Utmaning! 'Jag har aldrig.. alla som gjort det dricker 1 klunk.",6:"Thunder! Spela en runda, förlorare dricker 2 klunkar.",7:"Drick 2 klunkar.",8:"Välj en spelare som dricker 4 klunk.",9:"Alla dricker 5 klunk.",10:"Utmaning! Drick 3 klunkar eller sjung en bit på en låt.",11:"Dela ut 2 klunkar till valfri spelare.",12:"Sanning eller konsekvens! Misslyckas? Drick 2 klunkar.",13:"Drick 3 klunk.",14:"Välj 2 spelare som dricker 1 klunk vardera.",15:"Utmaning! Håll en mini-tävling, förloraren dricker 1 shot.",16:"Utmaning! Välj en spelare att köra sten saxpåse med, förloraren dricker 3 klunkar.",17:"Välj en spelare som dricker 2 klunkar.",18:"Vattenfall! Alla börjar dricka, du kan sluta när personen till höger om dig slutar.",19:"Utmaning! 'Jag har aldrig.. alla som gjort det dricker 1 klunk.",20:"Alla dricker 1 klunk.",21:"Välj en spelare som dricker 3 klunkar.",22:"Higher or Lower! Misslyckas? Drick 1 shot.",23:"Drick 2 klunkar.",24:"Dela ut 1 klunk till valfri spelare.",25:"Utmaning! Gör en kort charad, vinnaren delar ut 1 shot.",26:"Alla dricker 2 klunkar.",27:"Välj en spelare som dricker 6 klunkar.",28:"Utmaning! Välj en spelare att tävla med, förloraren dricker 3 klunkar.",29:"Utmaning! 'Jag har aldrig.. alla som gjort det dricker 1 klunk.",30:"Alla dricker 2 klunkar.",31:"Välj en spelare som dricker 2 klunkar.",32:"Kategori! Misslyckas? Drick 3 klunk",33:"Drick 1 klunk.",34:"Dela ut 10 klunkar till valfria spelare.",35:"Utmaning! Håll en mini-tävling, förloraren dricker 3 klunkar.",36:"Alla dricker 1 klunk.",37:"Välj en spelare som dricker 1 klunk.",38:"Drick 2 klunkar.",39:"Utmaning! Välj en spelare att tävla med, förloraren dricker 5 klunk.",40:"GRATTIS! Du har nått slutet och vunnit spelet!"};
 
 function renderPlayers(){
   cells.forEach((c,i)=>{
@@ -358,14 +355,8 @@ document.addEventListener("keydown",(e)=>{
 renderPlayers();
 updateInfo();
 
-// --- Musik ---
-const songs = ["Ny mapp/Sipp Sipp.mp3",
-"Ny mapp/Beer Pong.mp3",
-"Ny mapp/Flip Cup.mp3",
-"Ny mapp/Jag har aldrig.mp3",
-"Ny mapp/Rygg mot Rygg.mp3",
-"Ny mapp/Vattenfall!.mp3"
-];
+/* --- Musik --- */
+const songs = ["Ny mapp/Sipp Sipp.mp3","Ny mapp/Beer Pong.mp3","Ny mapp/Flip Cup.mp3","Ny mapp/Jag har aldrig.mp3","Ny mapp/Rygg mot Rygg.mp3","Ny mapp/Vattenfall!.mp3"];
 let currentIndex = 0;
 const bgMusic = document.getElementById("bgMusic");
 const playPauseBtn = document.getElementById("playPause");
